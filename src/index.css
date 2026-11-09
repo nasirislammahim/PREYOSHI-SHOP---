@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-burgundy: #7A1238;
+    --color-deep-pink: #BE0750;
+    --color-blush: #F8E8E9;
+    --color-gold: #D9A441;
+    --color-gold-light: #F6E2B3;
+    --color-warm-white: #FFF9F2;
+    --color-dark: #2A101A;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif;
+    background-color: #FFF9F2;
+    color: #2D1B22;
+  }
+
+  h1, h2, h3, .font-serif-brand {
+    font-family: 'Cinzel', 'Playfair Display', 'Hind Siliguri', serif;
+  }
+
+  .font-bangla {
+    font-family: 'Hind Siliguri', 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #FFF9F2;
+}
+::-webkit-scrollbar-thumb {
+  background: #D9A441;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #BE0750;
+}
+
+/* Hide scrollbar for category tabs */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Printable Invoice styling */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-invoice, #printable-invoice * {
+    visibility: visible;
+  }
+  #printable-invoice {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    background: white;
+    color: black;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

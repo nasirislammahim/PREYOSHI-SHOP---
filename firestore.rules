@@ -1,0 +1,205 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(customerUid) {
+      return (isSignedIn() && request.auth.uid == customerUid) ||
+        customerUid == 'USR-GUEST' ||
+        customerUid.matches('^USR-.*');
+    }
+
+    function isSuperAdmin() {
+      return isSignedIn() && request.auth.token.email == 'nasirislammahimbd@gmail.com';
+    }
+
+    function isAdmin() {
+      return isSuperAdmin() || (
+        isSignedIn() && (
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+          exists(/databases/$(database)/documents/staff/$(request.auth.uid))
+        )
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidConversation(data) {
+      return data.keys().hasAll(['conversationId', 'customerUid', 'title', 'createdAt', 'updatedAt', 'archived']) &&
+        data.keys().hasOnly(['conversationId', 'customerUid', 'title', 'createdAt', 'updatedAt', 'archived']) &&
+        data.conversationId is string && isValidId(data.conversationId) &&
+        data.customerUid is string && isValidId(data.customerUid) &&
+        data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+        data.createdAt is string && data.createdAt.size() <= 64 &&
+        data.updatedAt is string && data.updatedAt.size() <= 64 &&
+        data.archived is bool;
+    }
+
+    function isValidMessage(data) {
+      return data.keys().hasAll(['messageId', 'conversationId', 'customerUid', 'role', 'message', 'timestamp', 'status']) &&
+        data.keys().hasOnly(['messageId', 'conversationId', 'customerUid', 'role', 'message', 'timestamp', 'status', 'relatedProductIds']) &&
+        data.messageId is string && isValidId(data.messageId) &&
+        data.conversationId is string && isValidId(data.conversationId) &&
+        data.customerUid is string && isValidId(data.customerUid) &&
+        data.role in ['user', 'assistant', 'system'] &&
+        data.message is string && data.message.size() <= 10000 &&
+        data.timestamp is string && data.timestamp.size() <= 64 &&
+        data.status in ['sent', 'delivered', 'failed'] &&
+        (!('relatedProductIds' in data) || (data.relatedProductIds is list && data.relatedProductIds.size() <= 20));
+    }
+
+    function isValidStaff(data) {
+      return data.keys().hasAll(['id', 'name', 'email', 'phone', 'role', 'department', 'employeeId', 'jobTitle', 'status', 'invitedAt']) &&
+        data.id is string && isValidId(data.id) &&
+        data.name is string && data.name.size() <= 128 &&
+        data.email is string && data.email.size() <= 128 &&
+        data.role is string &&
+        data.status in ['active', 'suspended', 'invited'];
+    }
+
+    function isValidAuditLog(data) {
+      return data.keys().hasAll(['id', 'timestamp', 'actorId', 'actorName', 'actorEmail', 'actorRole', 'action', 'target', 'details']) &&
+        data.id is string && isValidId(data.id) &&
+        data.action is string && data.action.size() <= 128 &&
+        data.details is string && data.details.size() <= 2000;
+    }
+
+    function isValidReview(data) {
+      return data.keys().hasAll(['id', 'productId', 'customerName', 'rating', 'comment', 'verifiedPurchase', 'status', 'createdAt']) &&
+        data.id is string && isValidId(data.id) &&
+        data.productId is string && isValidId(data.productId) &&
+        data.customerName is string && data.customerName.size() <= 128 &&
+        data.rating is number && data.rating >= 1 && data.rating <= 5 &&
+        data.comment is string && data.comment.size() <= 2000 &&
+        data.verifiedPurchase is bool &&
+        data.status in ['approved', 'pending', 'rejected', 'flagged'];
+    }
+
+    // AI Conversations collection
+    match /ai_conversations/{conversationId} {
+      allow get: if isOwner(resource.data.customerUid) || isAdmin();
+      allow list: if isOwner(resource.data.customerUid) || isAdmin();
+      allow create: if isValidId(conversationId) &&
+        incoming().conversationId == conversationId &&
+        isValidConversation(incoming()) &&
+        (isOwner(incoming().customerUid) || isAdmin());
+      allow update: if (isOwner(resource.data.customerUid) || isAdmin()) &&
+        isValidConversation(incoming()) &&
+        incoming().conversationId == existing().conversationId &&
+        incoming().customerUid == existing().customerUid &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['title', 'updatedAt', 'archived']);
+      allow delete: if isOwner(resource.data.customerUid) || isAdmin();
+    }
+
+    // AI Messages collection
+    match /ai_messages/{messageId} {
+      allow get: if isOwner(resource.data.customerUid) || isAdmin();
+      allow list: if isOwner(resource.data.customerUid) || isAdmin();
+      allow create: if isValidId(messageId) &&
+        incoming().messageId == messageId &&
+        isValidMessage(incoming()) &&
+        (isOwner(incoming().customerUid) || isAdmin());
+      allow update: if (isOwner(resource.data.customerUid) || isAdmin()) &&
+        isValidMessage(incoming()) &&
+        incoming().messageId == existing().messageId &&
+        incoming().conversationId == existing().conversationId &&
+        incoming().customerUid == existing().customerUid &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'message', 'relatedProductIds']);
+      allow delete: if isOwner(resource.data.customerUid) || isAdmin();
+    }
+
+    function isValidStaffRole(data) {
+      return data.keys().hasAll(['roleId', 'userEmail', 'role', 'permissions', 'assignedBy', 'assignedAt', 'status']) &&
+        data.id is string ? isValidId(data.id) : true &&
+        data.roleId is string && isValidId(data.roleId) &&
+        data.userEmail is string && data.userEmail.size() <= 128 &&
+        data.role is string &&
+        data.permissions is list && data.permissions.size() <= 30 &&
+        data.assignedBy is string &&
+        data.status in ['active', 'suspended'];
+    }
+
+    // Staff Collection - Super Admin Exclusively Controls
+    match /staff/{staffId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSuperAdmin() && isValidId(staffId) && isValidStaff(incoming());
+      allow update: if isSuperAdmin() &&
+        incoming().email != 'nasirislammahimbd@gmail.com' &&
+        isValidStaff(incoming());
+      allow delete: if isSuperAdmin() && existing().email != 'nasirislammahimbd@gmail.com';
+    }
+
+    // StaffRoles Collection - Super Admin Exclusively Controls
+    match /StaffRoles/{roleId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSuperAdmin() &&
+        isValidId(roleId) &&
+        isValidStaffRole(incoming()) &&
+        incoming().role != 'super_admin' &&
+        incoming().assignedBy == 'nasirislammahimbd@gmail.com';
+      allow update: if isSuperAdmin() &&
+        existing().userEmail != 'nasirislammahimbd@gmail.com' &&
+        incoming().role != 'super_admin' &&
+        isValidStaffRole(incoming()) &&
+        incoming().assignedBy == 'nasirislammahimbd@gmail.com';
+      allow delete: if isSuperAdmin() && existing().userEmail != 'nasirislammahimbd@gmail.com';
+    }
+
+    match /staff_roles/{roleId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSuperAdmin() &&
+        isValidId(roleId) &&
+        isValidStaffRole(incoming()) &&
+        incoming().role != 'super_admin' &&
+        incoming().assignedBy == 'nasirislammahimbd@gmail.com';
+      allow update: if isSuperAdmin() &&
+        existing().userEmail != 'nasirislammahimbd@gmail.com' &&
+        incoming().role != 'super_admin' &&
+        isValidStaffRole(incoming()) &&
+        incoming().assignedBy == 'nasirislammahimbd@gmail.com';
+      allow delete: if isSuperAdmin() && existing().userEmail != 'nasirislammahimbd@gmail.com';
+    }
+
+    // Audit Logs - Append Only Security Trail
+    match /audit_logs/{logId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && isValidId(logId) && isValidAuditLog(incoming());
+      allow update, delete: if false; // Immutable audit logs
+    }
+
+    // Customer Reviews Collection
+    match /reviews/{reviewId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isValidId(reviewId) && isValidReview(incoming());
+      allow update: if isAdmin() || (
+        isSignedIn() &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['helpfulCount', 'votedUserIds'])
+      );
+      allow delete: if isAdmin();
+    }
+  }
+}

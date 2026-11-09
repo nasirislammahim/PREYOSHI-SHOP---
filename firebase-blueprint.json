@@ -1,0 +1,369 @@
+{
+  "entities": {
+    "AIConversation": {
+      "title": "AI Conversation",
+      "description": "A customer conversation session with the AI shopping assistant.",
+      "type": "object",
+      "properties": {
+        "conversationId": {
+          "type": "string",
+          "description": "Unique identifier of the conversation",
+          "maxLength": 128
+        },
+        "customerUid": {
+          "type": "string",
+          "description": "Firebase Auth UID or customer identifier",
+          "maxLength": 128
+        },
+        "title": {
+          "type": "string",
+          "description": "Conversation topic title",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of creation",
+          "maxLength": 64
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of last update",
+          "maxLength": 64
+        },
+        "archived": {
+          "type": "boolean",
+          "description": "Whether this conversation is archived"
+        }
+      },
+      "required": ["conversationId", "customerUid", "title", "createdAt", "updatedAt", "archived"]
+    },
+    "AIMessage": {
+      "title": "AI Message",
+      "description": "An individual chat message in an AI conversation.",
+      "type": "object",
+      "properties": {
+        "messageId": {
+          "type": "string",
+          "description": "Unique identifier of the message",
+          "maxLength": 128
+        },
+        "conversationId": {
+          "type": "string",
+          "description": "ID of parent conversation",
+          "maxLength": 128
+        },
+        "customerUid": {
+          "type": "string",
+          "description": "Owner UID of the conversation message",
+          "maxLength": 128
+        },
+        "role": {
+          "type": "string",
+          "description": "Sender role",
+          "enum": ["user", "assistant", "system"]
+        },
+        "message": {
+          "type": "string",
+          "description": "Message content",
+          "maxLength": 10000
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "ISO timestamp of the message",
+          "maxLength": 64
+        },
+        "relatedProductIds": {
+          "type": "array",
+          "description": "List of referenced product IDs"
+        },
+        "status": {
+          "type": "string",
+          "description": "Delivery status of message",
+          "enum": ["sent", "delivered", "failed"]
+        }
+      },
+      "required": ["messageId", "conversationId", "customerUid", "role", "message", "timestamp", "status"]
+    },
+    "StaffMember": {
+      "title": "Enterprise Staff Member",
+      "description": "Privileged staff account managed exclusively by the Super Admin.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique staff document ID",
+          "maxLength": 128
+        },
+        "name": {
+          "type": "string",
+          "description": "Staff member full name",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "description": "Staff verified email address",
+          "maxLength": 128
+        },
+        "phone": {
+          "type": "string",
+          "description": "Staff contact phone",
+          "maxLength": 64
+        },
+        "role": {
+          "type": "string",
+          "description": "Staff enterprise role",
+          "maxLength": 64
+        },
+        "department": {
+          "type": "string",
+          "description": "Assigned organizational department",
+          "maxLength": 128
+        },
+        "employeeId": {
+          "type": "string",
+          "description": "Employee identification code",
+          "maxLength": 64
+        },
+        "jobTitle": {
+          "type": "string",
+          "description": "Official job title",
+          "maxLength": 128
+        },
+        "status": {
+          "type": "string",
+          "description": "Account status",
+          "enum": ["active", "suspended", "invited"]
+        },
+        "invitedAt": {
+          "type": "string",
+          "description": "ISO timestamp of invitation",
+          "maxLength": 64
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Creator identity or super admin email",
+          "maxLength": 128
+        }
+      },
+      "required": ["id", "name", "email", "phone", "role", "department", "employeeId", "jobTitle", "status", "invitedAt"]
+    },
+    "AuditLog": {
+      "title": "Security Audit Log",
+      "description": "Immutable security log of administrative actions.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique audit log ID",
+          "maxLength": 128
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "ISO timestamp of action",
+          "maxLength": 64
+        },
+        "actorId": {
+          "type": "string",
+          "description": "Actor staff or user ID",
+          "maxLength": 128
+        },
+        "actorName": {
+          "type": "string",
+          "description": "Name of actor",
+          "maxLength": 128
+        },
+        "actorEmail": {
+          "type": "string",
+          "description": "Email of actor",
+          "maxLength": 128
+        },
+        "actorRole": {
+          "type": "string",
+          "description": "Role of actor at the time of action",
+          "maxLength": 64
+        },
+        "action": {
+          "type": "string",
+          "description": "Action performed",
+          "maxLength": 128
+        },
+        "target": {
+          "type": "string",
+          "description": "Target entity or resource",
+          "maxLength": 200
+        },
+        "details": {
+          "type": "string",
+          "description": "Details of the change",
+          "maxLength": 2000
+        }
+      },
+      "required": ["id", "timestamp", "actorId", "actorName", "actorEmail", "actorRole", "action", "target", "details"]
+    },
+    "CustomerReview": {
+      "title": "Customer Review",
+      "description": "Verified customer review with moderation status and verified purchase proof.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Review unique identifier",
+          "maxLength": 128
+        },
+        "productId": {
+          "type": "string",
+          "description": "Product ID",
+          "maxLength": 128
+        },
+        "customerName": {
+          "type": "string",
+          "description": "Name of reviewing customer",
+          "maxLength": 128
+        },
+        "rating": {
+          "type": "number",
+          "description": "Rating out of 5"
+        },
+        "comment": {
+          "type": "string",
+          "description": "Review text comment",
+          "maxLength": 2000
+        },
+        "location": {
+          "type": "string",
+          "description": "Location of customer",
+          "maxLength": 128
+        },
+        "verifiedPurchase": {
+          "type": "boolean",
+          "description": "Whether purchase was verified against delivered order"
+        },
+        "orderId": {
+          "type": "string",
+          "description": "Associated delivered order ID",
+          "maxLength": 64
+        },
+        "category": {
+          "type": "string",
+          "description": "Review category",
+          "maxLength": 64
+        },
+        "status": {
+          "type": "string",
+          "description": "Moderation status",
+          "enum": ["approved", "pending", "rejected", "flagged"]
+        },
+        "helpfulCount": {
+          "type": "number",
+          "description": "Count of helpful votes"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of submission",
+          "maxLength": 64
+        }
+      },
+      "required": ["id", "productId", "customerName", "rating", "comment", "verifiedPurchase", "status", "createdAt"]
+    },
+    "StaffRole": {
+      "title": "Staff Role Assignment",
+      "description": "Secure administrative role assignment verified exclusively by the single Super Admin.",
+      "type": "object",
+      "properties": {
+        "roleId": {
+          "type": "string",
+          "description": "Unique role assignment document ID",
+          "maxLength": 128
+        },
+        "userEmail": {
+          "type": "string",
+          "description": "Verified email address of the assigned staff member",
+          "maxLength": 128
+        },
+        "userName": {
+          "type": "string",
+          "description": "Full name of the staff member",
+          "maxLength": 128
+        },
+        "role": {
+          "type": "string",
+          "description": "Administrative or operational role",
+          "enum": [
+            "super_admin",
+            "admin",
+            "managing_director",
+            "manager",
+            "employee",
+            "order_manager",
+            "inventory_manager",
+            "accounts_staff",
+            "customer_support",
+            "delivery_staff",
+            "marketing_staff"
+          ]
+        },
+        "permissions": {
+          "type": "array",
+          "description": "Granted granular permissions"
+        },
+        "department": {
+          "type": "string",
+          "description": "Assigned department",
+          "maxLength": 128
+        },
+        "employeeId": {
+          "type": "string",
+          "description": "Assigned employee ID",
+          "maxLength": 64
+        },
+        "assignedBy": {
+          "type": "string",
+          "description": "Super admin email who verified and granted this role",
+          "maxLength": 128
+        },
+        "assignedAt": {
+          "type": "string",
+          "description": "ISO timestamp when the role was assigned",
+          "maxLength": 64
+        },
+        "status": {
+          "type": "string",
+          "description": "Role activation status",
+          "enum": ["active", "suspended"]
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of last update",
+          "maxLength": 64
+        }
+      },
+      "required": ["roleId", "userEmail", "role", "permissions", "assignedBy", "assignedAt", "status"]
+    }
+  },
+  "firestore": {
+    "/ai_conversations/{conversationId}": {
+      "schema": "AIConversation",
+      "description": "Customer AI conversations."
+    },
+    "/ai_messages/{messageId}": {
+      "schema": "AIMessage",
+      "description": "Messages belonging to AI conversations."
+    },
+    "/staff/{staffId}": {
+      "schema": "StaffMember",
+      "description": "Enterprise staff members and role definitions."
+    },
+    "/StaffRoles/{roleId}": {
+      "schema": "StaffRole",
+      "description": "Secure administrative role assignments verified by the single Super Admin."
+    },
+    "/audit_logs/{logId}": {
+      "schema": "AuditLog",
+      "description": "Permanent immutable audit trail for privileged staff actions."
+    },
+    "/reviews/{reviewId}": {
+      "schema": "CustomerReview",
+      "description": "Verified customer reviews and admin moderation queue."
+    }
+  }
+}

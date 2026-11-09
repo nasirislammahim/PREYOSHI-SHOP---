@@ -1,0 +1,26 @@
+{
+  "id": "/",
+  "name": "PREYOSHI SHOP - প্রেয়সী শপ",
+  "short_name": "Preyoshi",
+  "description": "Your Style ♥ Our Priority. Premium e-commerce in Bangladesh.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFF9F2",
+  "theme_color": "#7A1238",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
